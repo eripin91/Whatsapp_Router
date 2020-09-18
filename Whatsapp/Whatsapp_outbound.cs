@@ -36,31 +36,34 @@ namespace Whatsapp
                 log.LogInformation("C# HTTP trigger function processed a request.");
 
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                Whatsapp_Outbound_Smsdome Whatsapp_outbound_smsdome = JsonConvert.DeserializeObject<Whatsapp_Outbound_Smsdome>(requestBody);
+                Outbound_Webapp Outbound_webapp = JsonConvert.DeserializeObject<Outbound_Webapp>(requestBody);
 
-                if (Whatsapp_outbound_smsdome == null)
+                if (Outbound_webapp == null)
+                {
+                    log.LogInformation("err : Whatsapp_outbound_smsdome not found");
                     return new BadRequestObjectResult("Whatsapp_outbound_smsdome not found");
+                }
 
-                if (Whatsapp_outbound_smsdome.ContestId == 0)
+                if (Outbound_webapp.ContestId == 0)
+                {
+                    log.LogInformation("err : Contest id not found");
                     return new BadRequestObjectResult("Contest id not found");
-
-                if (Whatsapp_outbound_smsdome.OutboundNumber == null)
-                    return new BadRequestObjectResult("Outbound number not found");
-
-                if (Whatsapp_outbound_smsdome.Whatsapp_outbound_sinch == null)
-                    return new BadRequestObjectResult("Whatsapp_outbound_sinch not found");
-
-                string outboundNumber = Whatsapp_outbound_smsdome.OutboundNumber ?? string.Empty;
-                int contestId = Whatsapp_outbound_smsdome.ContestId;
+                }
+                
+                int contestId = Outbound_webapp.ContestId;
 
                 //get contest router
                 ContestRouter_Contest contestRouter = _context.ContestRouter_Contests.
                     FirstOrDefault(x => x.IsActive &&
-                                        x.OutboundNumber == outboundNumber &&
                                         x.ContestId==contestId);
 
                 if (contestRouter == null)
-                    return new BadRequestObjectResult("contest not found");
+                {
+                    log.LogInformation("err : Contest not found");
+                    return new BadRequestObjectResult("Contest not found");
+                }
+
+                string outboundNumber = contestRouter.OutboundNumber ?? string.Empty;
 
                 //validate campaign date
                 //if(DateTime.UtcNow<contestRouter.StartDate || DateTime.UtcNow>contestRouter.EndDate)
@@ -80,7 +83,8 @@ namespace Whatsapp
                 string ApiVersionURI = Environment.GetEnvironmentVariable("ApiVersionURI");
 
                 var url = endpointValue + ApiVersionURI + botIdValue + "/messages";
-                string response = string.Empty;
+
+                log.LogInformation("url : "+ url);
 
                 using (var httpClient = new HttpClient())
                 {
@@ -90,32 +94,47 @@ namespace Whatsapp
 
                         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {bearerTokenValue}");
 
-                        string whatsappOutboundSinch = JsonConvert.SerializeObject(Whatsapp_outbound_smsdome.Whatsapp_outbound_sinch);
+                        Whatsapp_Outbound_Sinch Whatsapp_outbound_sinch = new Whatsapp_Outbound_Sinch
+                        {
+                            To = new string[]{ Outbound_webapp?.MobileNo },
+                            Outbound_sinch_text_message = new Outbound_Sinch_Text_Message
+                            {
+                                Type = Outbound_webapp?.MessageType,
+                                Text = Outbound_webapp?.MessageText
+                            }
+                        };
+                        string whatsappOutboundSinch = JsonConvert.SerializeObject(Whatsapp_outbound_sinch);
                         request.Content = new StringContent(whatsappOutboundSinch, Encoding.UTF8, "application/json");
 
                         var result = await httpClient.SendAsync(request);
-                        response = await result.Content.ReadAsStringAsync();
+                        string response = await result.Content.ReadAsStringAsync();
 
                         if (result.IsSuccessStatusCode)
                         {
                             //save to db
                             Whatsapp_Outbound Whatsapp_outbound = new Whatsapp_Outbound
                             {
-                                ContestId = Whatsapp_outbound_smsdome?.ContestId,
-                                OutboundNumber = Whatsapp_outbound_smsdome?.OutboundNumber,
+                                ContestId = Outbound_webapp?.ContestId,
+                                OutboundNumber = outboundNumber,
                                 CreatedOn = DateTime.UtcNow,
-                                OutboundMessageType = Whatsapp_outbound_smsdome?.Whatsapp_outbound_sinch?.Outbound_sinch_text_message?.Type ?? string.Empty,
-                                OutboundMessageText = Whatsapp_outbound_smsdome?.Whatsapp_outbound_sinch?.Outbound_sinch_text_message?.Text ?? string.Empty                                
+                                Response = response,
+                                OutboundMessageType = Outbound_webapp?.MessageType ?? string.Empty,
+                                OutboundMessageText = Outbound_webapp?.MessageText ?? string.Empty,
                             };
 
                             _context.Whatsapp_Outbounds.Add(Whatsapp_outbound);
-                            
-                            if(_context.SaveChanges()>0)
+
+                            if (_context.SaveChanges() > 0)
                                 return new OkObjectResult(response);
-                            else return new BadRequestObjectResult("failed to save Whatsapp_outbound");
+                            else
+                            {
+                                log.LogInformation("err : failed to save Whatsapp_outbound");
+                                return new BadRequestObjectResult("failed to save Whatsapp_outbound");
+                            }
                         }
                         else
                         {
+                            log.LogInformation("err : " + response);
                             return new BadRequestObjectResult(response);
                         }
                     }
@@ -134,7 +153,7 @@ namespace Whatsapp
             }
             catch (Exception ex)
             {
-                return new BadRequestObjectResult(ex.Message);
+                return new BadRequestObjectResult("Exception : " + ex.Message);
             }
         }
 

@@ -38,26 +38,27 @@ namespace Whatsapp
     {
         [Key]
         public int WhatsappInboundId { get; set; }
-        public Nullable<int> ContestId { get; set; }
-        public Nullable<System.DateTime> CreatedOn { get; set; }
+        public int? ContestId { get; set; }
+        public DateTime? CreatedOn { get; set; }
         public string ContactName { get; set; }
         public string ContactWaId { get; set; }
         public string NotificationFrom { get; set; }
         public string NotificationTo { get; set; }
-        public string NotificatinMessageId { get; set; }
+        public string NotificationMessageId { get; set; }
         public string NotificationMessageType { get; set; }
         public string NotificationMessageBody { get; set; }
         public string NotificationMessageDetails { get; set; }
         public string NotificationMessageUrl { get; set; }
-        public string NotificatinMessageMimeType { get; set; }
-        public string NotificatinMessageCaption { get; set; }
+        public string NotificationMessageMimeType { get; set; }
+        public string NotificationMessageCaption { get; set; }
+        public DateTime? NotificationTimestamp { get; set; }
     }    
     public class Whatsapp_Inbound_Sinch
     {
         [JsonProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("status")]
+        [JsonProperty("statuses")]
         public Status_Model[] Statuses { get; set; }
 
         [JsonProperty("contacts")]
@@ -100,6 +101,9 @@ namespace Whatsapp
         [JsonProperty("to")]
         public string To { get; set; }
 
+        [JsonProperty("timestamp")]
+        public DateTime? Timestamp { get; set; }
+
         [JsonProperty("message_id")]
         public string MessageId { get; set; }
 
@@ -108,6 +112,7 @@ namespace Whatsapp
     }
     public class Inbound_Sinch_Message
     {
+        public DateTime? CreatedOn { get; set; }
         [JsonProperty("type")]
         public string Type { get; set; }
 
@@ -126,14 +131,33 @@ namespace Whatsapp
         [JsonProperty("details")]
         public string Details { get; set; }
     }
+
+    public class Inbound_Webapp
+    {
+        [JsonProperty("CreatedOn")]
+        public DateTime? CreatedOn { get; set; }
+
+        [JsonProperty("MobileNo")]
+        public string MobileNo { get; set; }
+
+        [JsonProperty("Message")]
+        public string Message { get; set; }
+
+        [JsonProperty("FileLink")]
+        public string FileLink { get; set; }
+
+        [JsonProperty("EntrySource")]
+        public string EntrySource { get; set; }
+    }
 #endregion
     #region whatsapp_outbound
     public class Whatsapp_Outbound
     {
         [Key]
         public int WhatsappOutboundId { get; set; }
-        public Nullable<int> ContestId { get; set; }
-        public Nullable<System.DateTime> CreatedOn { get; set; }
+        public int? ContestId { get; set; }
+        public DateTime? CreatedOn { get; set; }
+        public string Response { get; set; }
         public string OutboundNumber { get; set; }
         public string OutboundMessageType { get; set; }
         public string OutboundMessageText { get; set; }
@@ -169,8 +193,22 @@ namespace Whatsapp
         public string Text { get; set; }
     }
 
-    #endregion
-    public class BaseContextFactory : IDesignTimeDbContextFactory<BaseEntities>
+    public class Outbound_Webapp
+    {
+        [JsonProperty("ContestId")]
+        public int ContestId { get; set; } = 0;
+
+        [JsonProperty("MobileNo")]
+        public string MobileNo { get; set; }
+
+        [JsonProperty("MessageText")]
+        public string MessageText { get; set; }
+
+        [JsonProperty("MessageType")]
+        public string MessageType { get; set; }
+    }
+        #endregion
+        public class BaseContextFactory : IDesignTimeDbContextFactory<BaseEntities>
     {
         public BaseEntities CreateDbContext(string[] args)
         {
