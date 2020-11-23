@@ -26,5 +26,6 @@ namespace Whatsapp
                 return keyVaultException.Message;
             }
         }
+
     }
 }

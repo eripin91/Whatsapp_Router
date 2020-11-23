@@ -14,27 +14,37 @@ namespace Whatsapp
             : base(options)
         { }
         public DbSet<ContestRouter_Contest> ContestRouter_Contests { get; set; }
-        public DbSet<Whatsapp_Inbound> Whatsapp_Inbounds { get; set; }
-        public DbSet<Whatsapp_Outbound> Whatsapp_Outbounds { get; set; }
+        public DbSet<ContestRouter_WA_Account> ContestRouter_WA_Accounts { get; set; }
+        public DbSet<ContestRouter_WA_Inbound> ContestRouter_WA_Inbounds { get; set; }
+        public DbSet<ContestRouter_WA_Outbound> ContestRouter_WA_Outbounds { get; set; }
         
     }
     public class ContestRouter_Contest
     {
         [Key]
+        public int ContestRouterId { get; set; }
         public int ContestId { get; set; }
         public string ContestType { get; set; }
         public string ContestName { get; set; }
         public System.DateTime StartDate { get; set; }
         public System.DateTime EndDate { get; set; }
         public bool IsActive { get; set; }
-        public string InboundNumber { get; set; }
-        public string OutboundNumber { get; set; }
+        public string ContestNumber { get; set; }
         public string Keyword { get; set; }
         public string ContestInboundUrl { get; set; }
     }
 
+    public class ContestRouter_WA_Account
+    {
+        [Key]
+        public int WaAccountId { get; set; }
+        public string Provider { get; set; }
+        public string WhatsappID { get; set; }
+        public string WhatsappNumber { get; set; }
+    }
+
     #region whatsapp_inbound
-    public class Whatsapp_Inbound
+    public class ContestRouter_WA_Inbound
     {
         [Key]
         public int WhatsappInboundId { get; set; }
@@ -151,7 +161,7 @@ namespace Whatsapp
     }
 #endregion
     #region whatsapp_outbound
-    public class Whatsapp_Outbound
+    public class ContestRouter_WA_Outbound
     {
         [Key]
         public int WhatsappOutboundId { get; set; }

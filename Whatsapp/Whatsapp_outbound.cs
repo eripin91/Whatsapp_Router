@@ -63,7 +63,7 @@ namespace Whatsapp
                     return new BadRequestObjectResult("Contest not found");
                 }
 
-                string outboundNumber = contestRouter.OutboundNumber ?? string.Empty;
+                string outboundNumber = contestRouter.ContestNumber ?? string.Empty;
 
                 //validate campaign date
                 //if(DateTime.UtcNow<contestRouter.StartDate || DateTime.UtcNow>contestRouter.EndDate)
@@ -112,7 +112,7 @@ namespace Whatsapp
                         if (result.IsSuccessStatusCode)
                         {
                             //save to db
-                            Whatsapp_Outbound Whatsapp_outbound = new Whatsapp_Outbound
+                            ContestRouter_WA_Outbound Whatsapp_outbound = new ContestRouter_WA_Outbound
                             {
                                 ContestId = Outbound_webapp?.ContestId,
                                 OutboundNumber = outboundNumber,
@@ -122,7 +122,7 @@ namespace Whatsapp
                                 OutboundMessageText = Outbound_webapp?.MessageText ?? string.Empty,
                             };
 
-                            _context.Whatsapp_Outbounds.Add(Whatsapp_outbound);
+                            _context.ContestRouter_WA_Outbounds.Add(Whatsapp_outbound);
 
                             if (_context.SaveChanges() > 0)
                                 return new OkObjectResult(response);

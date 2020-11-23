@@ -70,8 +70,10 @@ namespace Whatsapp
                 {
                     Dictionary<string, string> botIdMap = new Dictionary<string, string>();
                     botIdMap.Add("0e2492a8-9a00-4a53-80a3-962e499a69e8", "6597673663");
+                    string botId = Whatsapp_inbound_sinch.Notifications[i]?.To ?? string.Empty;
+                    var WaAccount = _context.ContestRouter_WA_Accounts.FirstOrDefault(s => s.WhatsappID == botId);
 
-                    string inboundNumber = botIdMap[Whatsapp_inbound_sinch.Notifications[i]?.To] ?? string.Empty;
+                    string inboundNumber = WaAccount?.WhatsappNumber ?? string.Empty;
                     string entryText = string.Empty;
 
                     if(Whatsapp_inbound_sinch.Notifications[i]?.Inbound_sinch_message?.Type=="text")
@@ -86,7 +88,7 @@ namespace Whatsapp
                     //get contest router
                     ContestRouter_Contest Contest_router = _context.ContestRouter_Contests.
                         FirstOrDefault(x => x.IsActive &&
-                                            x.InboundNumber == inboundNumber &&
+                                            x.ContestNumber == inboundNumber &&
                                             x.Keyword == keyword);
 
                     if (Contest_router == null)
@@ -96,7 +98,7 @@ namespace Whatsapp
                     }
 
                     //save to db
-                    Whatsapp_Inbound Whatsapp_inbound = new Whatsapp_Inbound
+                    ContestRouter_WA_Inbound Whatsapp_inbound = new ContestRouter_WA_Inbound
                     {
                         ContestId = Contest_router?.ContestId,
                         CreatedOn = DateTime.UtcNow,
@@ -114,7 +116,7 @@ namespace Whatsapp
                         NotificationTimestamp = Whatsapp_inbound_sinch?.Notifications?[i]?.Timestamp
                     };
 
-                    _context.Whatsapp_Inbounds.Add(Whatsapp_inbound);
+                    _context.ContestRouter_WA_Inbounds.Add(Whatsapp_inbound);
 
                     //call inbound url
                     using (var httpClient = new HttpClient())
